@@ -1,12 +1,58 @@
 const modeloCelular = require("../model/modelCelulares") 
+const fs = require('fs');
+const nodemailer = require('nodemailer');
+
+
+
+//npm i multer path 
+const multer = require('multer');
+const path = require('path');
+
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'src/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ storage: storage }).single('image');
+
+
 
 
 const saludar = ()=>{
     console.log('Hola');
 }
 
-const agregar =(req,res)=>{
+
+// AGREGAR
+
+const agregar = async (req,res)=>{
+    await new Promise((resolve, reject) => {
+        upload(req, res, (err) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({ message: err.message });
+          }
+          resolve();
+        });
+      });
+  
+      
+  let image = req.file ? req.file.filename : 'default.png';
+  console.log(typeof(image))
+  //let img2=JSON.stringify(image)
     let info = req.body;
+    
+    info.imagen = image
+    console.log(info)
+    //console.log()
     const celular = new modeloCelular(info);  
     celular.save()
     .then((result) => {
@@ -24,6 +70,10 @@ const agregar =(req,res)=>{
     });
     
 }
+
+
+
+//Mostrar todo
 
 const mostrarTodo = (req,res)=>{
     modeloCelular.find().exec()
@@ -47,10 +97,13 @@ const mostrarTodo = (req,res)=>{
     });
 }
 
+
+// FILTRO
+
 const filtro = (req, res)=>{
     let consulta = {}
     consulta[req.params.key]=req.params.value;
-    //console.log(consulta)
+    
     modeloCelular.find(consulta)
     .then((resultado)=>{
         if(!resultado) res.status(202).send({mesaje:"No hay registro en la DB"})
@@ -67,10 +120,39 @@ const filtro = (req, res)=>{
     })
 }
 
-const editar = (req,res)=>{
+
+//EDITAR
+
+const editar = async(req,res)=>{
+
+    await new Promise((resolve, reject) => {
+        upload(req, res, (err) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({ message: err.message });
+          }
+          resolve();
+        });
+      });
+  
+      
+  let image = req.file ? req.file.filename : 'default.png';
+
     let consulta = {}
     consulta[req.params.key]=req.params.value;
+    const img = req.params.img;
     let nuevo =  req.body
+    nuevo.imagen = image
+
+    let imgUrl = `src/${img}`;
+    fs.unlink(imgUrl, (err => {
+        if (err) console.log(err);
+        else {
+          console.log(`Deleted file: ${img}`);
+        }
+      }));
+
+    //nuevo.unshift(image)
     console.log(consulta)
     console.log(nuevo)
     modeloCelular.findOneAndUpdate(consulta,nuevo,{new:true})
@@ -85,12 +167,24 @@ const editar = (req,res)=>{
     })
 }
 
+//ELIMINAR
+
+
 const eliminar = (req,res)=>{
     let consulta = {}
     consulta[req.params.key]=req.params.value;
     //console.log(consulta)
-    modeloCelular.deleteOne(consulta)
+    modeloCelular.findOneAndDelete(consulta)
     .then((resul)=>{
+
+        let imgUrl = `src/${resul.imagen}`;
+        fs.unlink(imgUrl, (err => {
+            if (err) console.log(err);
+            else {
+              console.log(`Deleted file: ${resul.imagen}`);
+            }
+          }));
+
         return res.status(200).send({
             mensaje:"Se elimino correctamente",
             status:"OK",
@@ -101,11 +195,52 @@ const eliminar = (req,res)=>{
     })
 }
 
+const sendmail = (req,res)=>{
+  const { from, to, subject, text, name, phone, pass } = req.body;
+    // Create a transporter object with your email service credentials
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: to,
+        pass: pass,
+      },
+      });
+
+  // Set up email options
+const mailOptions = {
+    from: from,
+    to: to,
+    subject: subject,
+    text: `Nombre: ${name}\nCorreo Electrónico: ${from}\nMensaje: ${text}\nTelefono:${phone}`
+  };
+
+  // Send the email
+transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.error(error);
+      return res.status(404).send({mensaje:"No se envio el mensaje"})
+    } else {
+      console.log('Email sent: ' + info.response);
+      return res.status(200).send({
+        mensaje:"Se envió el correo",
+        status:"OK"
+    })
+      
+    }
+  });
+ 
+}
+const hola = (req,res)=>{
+  return res.status(404).send({mensaje:"hola"})
+}
+
 module.exports={
     saludar,
     agregar,
     mostrarTodo,
     filtro,
     editar,
-    eliminar
+    eliminar,
+    sendmail,
+    hola
 }

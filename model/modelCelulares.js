@@ -4,16 +4,17 @@ const {Schema, model} = require("mongoose");
 
 const celularSchema = Schema({
     imagen: {
-        data: Buffer,
-        contentType: String //image/jpeg o image/png etc...
+        type: String,
     },
     marca: {
         type: String,
-        required: true
+        required: true,
+        unique:true
     },
     modelo: {
         type: String,
-        required: true
+        required: true,
+        unique:true
     },
     color: {
         type: String,
