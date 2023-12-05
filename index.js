@@ -12,7 +12,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}));
 
 const corsOptions = {
-    origin: 'https://node-express-production-33f4.up.railway.app', // Replace with your actual client app's URL
+    origin: 'https://railway.app/', // Replace with your actual client app's URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
   };
