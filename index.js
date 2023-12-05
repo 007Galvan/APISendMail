@@ -16,11 +16,13 @@ app.use(express.urlencoded({extended:true}));
 //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
 //     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
 //   };
+
+
   
 app.use(cors());
 
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*'); // Replace '*' with the specific origin(s) you want to allow
+    res.header('Access-Control-Allow-Origin', 'https://apisendmail-production.up.railway.app'); // Replace '*' with the specific origin(s) you want to allow
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
