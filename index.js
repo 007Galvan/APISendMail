@@ -11,7 +11,16 @@ app.use(express.json())
 //decodifica la informacion y la convierte en formato json//
 app.use(express.urlencoded({extended:true}));
 
-app.use(cors())
+const corsOptions = {
+    origin: 'https://node-express-production-33f4.up.railway.app', // Replace with your actual client app's URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Enable credentials (cookies, authorization headers, etc.)
+  };
+  
+app.use(cors(corsOptions));
+  
+
+//app.use(cors())
 
 app.use('/public', express.static(`${__dirname}/src`))
 
